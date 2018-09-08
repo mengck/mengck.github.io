@@ -1,0 +1,85 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta http-equiv="content-type" content="text/html; charset=utf-8"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport"><meta content="yes" name="apple-mobile-web-app-capable"><meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"><meta content="telephone=no" name="format-detection"><meta name="description"><title>Mq探讨 | 开开｜初开</title><link rel="stylesheet" type="text/css" href="/css/style.css?v=0.0.0"><link rel="stylesheet" type="text/css" href="//cdn.bootcss.com/normalize/8.0.0/normalize.min.css"><link rel="stylesheet" type="text/css" href="//cdn.bootcss.com/pure/1.0.0/pure-min.css"><link rel="stylesheet" type="text/css" href="//cdn.bootcss.com/pure/1.0.0/grids-responsive-min.css"><link rel="stylesheet" href="//cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css"><script type="text/javascript" src="//cdn.bootcss.com/jquery/3.3.1/jquery.min.js"></script><link rel="Shortcut Icon" type="image/x-icon" href="/favicon.ico"><link rel="apple-touch-icon" href="/apple-touch-icon.png"><link rel="apple-touch-icon-precomposed" href="/apple-touch-icon.png"></head><body><div class="body_container"><div id="header"><div class="site-name"><h1 class="hidden">Mq探讨</h1><a id="logo" href="/.">开开｜初开</a><p class="description">分享技术,记录生活</p></div><div id="nav-menu"><a class="current" href="/."><i class="fa fa-home"> 首页</i></a><a href="/archives/"><i class="fa fa-archive"> 归档</i></a><a href="/about/"><i class="fa fa-user"> 关于</i></a><a href="/atom.xml"><i class="fa fa-rss"> 订阅</i></a></div></div><div class="pure-g" id="layout"><div class="pure-u-1 pure-u-md-3-4"><div class="content_container"><div class="post"><h1 class="post-title">Mq探讨</h1><div class="post-meta">Aug 8, 2018</div><div class="post-content"><h3 id="MQ"><a href="#MQ" class="headerlink" title="MQ"></a>MQ</h3><p>　　MQ (Message Queue) 又称消息队列. 队列我们都知道，那什么是消息呢？消息指的是同一台机器的进程之间，或不同机器之间传输的数据。最简单的说，我们一个Rpc 请求，所带的数据就是一个消息。这就是传统的通信模式。但是这种模式有很多缺陷，例如当网络不好的时候，这种调用可能会丢失。<br><br></p><p>　　队列提供了一种一步通信协议，这意味着消息的发送者和接收者不需要同时于消息保持联系，发送者的消息会存储在队列中，直到接收者拿到它。 一般我们把消息的发送者称为生产者，消息的接收者称为消费者。由于生产者和消费者之间是不透明的，他们靠中间的纽带-队列来联系，那么在队列中，是消费者占主动还是生产者占主动呢，其实根据不同的获取消息的方式可以分为 pull or push 着两种。按字面上的理解，就是pull 是消费者需要自己控制去队列拉取消息，而push则是生产者占主动位置，将产生的消息push 给消费者，而这种push 可以点对点，也可以是一对多，而这种一对多的模式就是我们常说的广播模式</p><br><p></p><br><p>　　在分布式系统中，消息中间件是非常重要的组件，主要解决应用耦合，异步消息，流量削峰等问题。<br><br>常用的消息队列中间件有 activeMQ,RabbitMQ,ZeroMQ,Kafka,MetaMQ,RocketMQ </p>
+
+<p>　　这次我主要写的是kafka 这个消息中间件，kafka 是采用pull 这种模式来消费信息的，生产者将消息放入队列中，而消费者可以通过epull 方法获取消息来消费，下面还是先说下kafka 的几个关键概念吧</p>
+
+<h4 id="kafka-的基本介绍"><a href="#kafka-的基本介绍" class="headerlink" title="kafka 的基本介绍"></a>kafka 的基本介绍</h4><p>　　Kafka是最初由Linkedin公司开发，是一个分布式、分区的、多副本的、多订阅者，基于zookeeper协调的分布式日志系统（也可以当做MQ系统），常见可以用于web/nginx日志、访问日志，消息服务等等，Linkedin于2010年贡献给了Apache基金会并成为顶级开源项目</p>
+
+<p>主要应用场景是：日志收集系统和消息系统。</p>
+<p>Kafka主要设计目标如下：</p>
+<ul>
+<li><p>以时间复杂度为O(1)的方式提供消息持久化能力，即使对TB级以上数据也能保证常数时间的访问性能。</p>
+</li>
+<li><p>高吞吐率。即使在非常廉价的商用机器上也能做到单机支持每秒100K条消息的传输。</p>
+</li>
+<li><p>支持Kafka Server间的消息分区，及分布式消费，同时保证每个partition内的消息顺序传输。</p>
+</li>
+</ul>
+<p>同时支持离线数据处理和实时数据处理。</p>
+<h4 id="Kafka的设计原理分析"><a href="#Kafka的设计原理分析" class="headerlink" title="Kafka的设计原理分析"></a>Kafka的设计原理分析</h4><p><img src="http://muxiulin.cn/wp-content/uploads/2017/09/70b195e8-8739-4e38-b942-7352c679ac05.jpg" alt="image"></p>
+<p></p><p>　　一个典型的kafka集群中包含若干producer，若干broker，若干consumer，以及一个Zookeeper集群。Kafka通过Zookeeper管理集群配置，选举leader，以及在consumer group发生变化时进行rebalance。producer使用push模式将消息发布到broker，consumer使用pull模式从broker订阅并消费消息。</p><p></p>
+<h5 id="Kafka专用术语："><a href="#Kafka专用术语：" class="headerlink" title="Kafka专用术语："></a>Kafka专用术语：</h5><ul>
+<li><p>Broker：消息中间件处理结点，一个Kafka节点就是一个broker，多个broker可以组成一个Kafka集群。</p>
+</li>
+<li><p>Topic：一类消息，Kafka集群能够同时负责多个topic的分发。</p>
+</li>
+<li><p>Partition：topic物理上的分组，一个topic可以分为多个partition，每个partition是一个有序的队列。</p>
+</li>
+<li><p>Segment：partition物理上由多个segment组成。</p>
+</li>
+<li><p>offset：每个partition都由一系列有序的、不可变的消息组成，这些消息被连续的追加到partition中。partition中的每个消息都有一个连续的序列号叫做offset，用于partition唯一标识一条消息。</p>
+</li>
+<li><p>Producer：负责发布消息到Kafka broker。</p>
+</li>
+<li><p>Consumer：消息消费者，向Kafka broker读取消息的客户端。</p>
+</li>
+<li><p>Consumer Group：每个Consumer属于一个特定的Consumer Group。</p>
+</li>
+</ul>
+<h5 id="kafka-的消息传输的事务特点："><a href="#kafka-的消息传输的事务特点：" class="headerlink" title="kafka 的消息传输的事务特点："></a>kafka 的消息传输的事务特点：</h5><ul>
+<li>at most once :最多一次</li>
+<li>at least once :至少一次</li>
+<li>exactly once :只会一次</li>
+</ul>
+<h5 id="Kafka消息存储格式"><a href="#Kafka消息存储格式" class="headerlink" title="Kafka消息存储格式"></a>Kafka消息存储格式</h5><p>Topic &amp; Partition</p>
+<p>一个topic可以认为一个一类消息，每个topic将被分成多个partition，每个partition在存储层面是append log文件。</p>
+<p>在Kafka文件存储中，同一个topic下有多个不同partition，每个partition为一个目录，partiton命名规则为topic名称+有序序号，第一个partiton序号从0开始，序号最大值为partitions数量减1</p>
+<h5 id="副本（replication）策略"><a href="#副本（replication）策略" class="headerlink" title="副本（replication）策略"></a>副本（replication）策略</h5><p>Kafka的高可靠性的保障来源于其健壮的副本（replication）策略。</p>
+<p>1) 数据同步</p>
+<p>kafka在0.8版本前没有提供Partition的Replication机制，一旦Broker宕机，其上的所有Partition就都无法提供服务，而Partition又没有备份数据，数据的可用性就大大降低了。所以0.8后提供了Replication机制来保证Broker的failover。</p>
+<p>引入Replication之后，同一个Partition可能会有多个Replica，而这时需要在这些Replication之间选出一个Leader，Producer和Consumer只与这个Leader交互，其它Replica作为Follower从Leader中复制数据。</p>
+<p>2) 副本放置策略</p>
+<p>为了更好的做负载均衡，Kafka尽量将所有的Partition均匀分配到整个集群上。</p>
+<p>Kafka分配Replica的算法如下：</p>
+<p>将所有存活的N个Brokers和待分配的Partition排序</p>
+<p>将第i个Partition分配到第(i mod n)个Broker上，这个Partition的第一个Replica存在于这个分配的Broker上，并且会作为partition的优先副本</p>
+<p>将第i个Partition的第j个Replica分配到第((i + j) mod n)个Broker上</p>
+<p>假设集群一共有4个brokers，一个topic有4个partition，每个Partition有3个副本。下图是每个Broker上的副本分配情况。</p>
+<p><img src="http://muxiulin.cn/wp-content/uploads/2017/09/7f86499a-7e1b-492f-96a5-bb22e014d913.jpg" alt="image"></p>
+<p>3) 同步策略</p>
+<p>Producer在发布消息到某个Partition时，先通过ZooKeeper找到该Partition的Leader，然后无论该Topic的Replication Factor为多少，Producer只将该消息发送到该Partition的Leader。Leader会将该消息写入其本地Log。每个Follower都从Leader pull数据。这种方式上，Follower存储的数据顺序与Leader保持一致。Follower在收到该消息并写入其Log后，向Leader发送ACK。一旦Leader收到了ISR中的所有Replica的ACK，该消息就被认为已经commit了，Leader将增加HW并且向Producer发送ACK。</p>
+<p>为了提高性能，每个Follower在接收到数据后就立马向Leader发送ACK，而非等到数据写入Log中。因此，对于已经commit的消息，Kafka只能保证它被存于多个Replica的内存中，而不能保证它们被持久化到磁盘中，也就不能完全保证异常发生后该条消息一定能被Consumer消费。</p>
+<p>Consumer读消息也是从Leader读取，只有被commit过的消息才会暴露给Consumer。</p>
+<p>对于Kafka而言，定义一个Broker是否“活着”包含两个条件：</p>
+<ul>
+<li>一是它必须维护与ZooKeeper的session（这个通过ZooKeeper的Heartbeat机制来实现）。</li>
+</ul>
+<ul>
+<li>二是Follower必须能够及时将Leader的消息复制过来，不能“落后太多”。</li>
+</ul>
+<p>Leader会跟踪与其保持同步的Replica列表，该列表称为ISR（即in-sync Replica）。如果一个Follower宕机，或者落后太多，Leader将把它从ISR中移除。这里所描述的“落后太多”指Follower复制的消息落后于Leader后的条数超过预定值或者Follower超过一定时间未向Leader发送fetch请求。</p>
+<p>Kafka只解决fail/recover，一条消息只有被ISR里的所有Follower都从Leader复制过去才会被认为已提交。这样就避免了部分数据被写进了Leader，还没来得及被任何Follower复制就宕机了，而造成数据丢失（Consumer无法消费这些数据）。而对于Producer而言，它可以选择是否等待消息commit。这种机制确保了只要ISR有一个或以上的Follower，一条被commit的消息就不会丢失。</p>
+<p>4) leader选举</p>
+<p>Leader选举本质上是一个分布式锁，有两种方式实现基于ZooKeeper的分布式锁：</p>
+<ul>
+<li>节点名称唯一性：多个客户端创建一个节点，只有成功创建节点的客户端才能获得锁</li>
+</ul>
+<ul>
+<li>临时顺序节点：所有客户端在某个目录下创建自己的临时顺序节点，只有序号最小的才获得锁</li>
+</ul>
+<h5 id="Kafka消息分组，消息消费原理"><a href="#Kafka消息分组，消息消费原理" class="headerlink" title="Kafka消息分组，消息消费原理"></a>Kafka消息分组，消息消费原理</h5><p>同一Topic的一条消息只能被同一个Consumer Group内的一个Consumer消费，但多个Consumer Group可同时消费这一消息。</p>
+<p><img src="http://muxiulin.cn/wp-content/uploads/2017/09/78986b8e-a0dc-49a4-80c7-99c9aa9db259.jpg" alt="image"></p>
+<p>这是Kafka用来实现一个Topic消息的广播（发给所有的Consumer）和单播（发给某一个Consumer）的手段。一个Topic可以对应多个Consumer Group。如果需要实现广播，只要每个Consumer有一个独立的Group就可以了。要实现单播只要所有的Consumer在同一个Group里。用Consumer Group还可以将Consumer进行自由的分组而不需要多次发送消息到不同的Topic。</p>
+<h5 id="Push-vs-Pull"><a href="#Push-vs-Pull" class="headerlink" title="Push vs. Pull"></a>Push vs. Pull</h5><p>作为一个消息系统，Kafka遵循了传统的方式，选择由Producer向broker push消息并由Consumer从broker pull消息。</p>
+<p>参考：</p>
+<p><a href="http://muxiulin.cn/archives/1125" target="_blank" rel="noopener">http://muxiulin.cn/archives/1125</a></p>
+</div><div class="tags"><a href="/tags/学习/">学习</a></div><div class="post-nav"><a class="next" href="/2018/07/22/MaxPQ/">优先队列</a></div></div></div></div><div class="pure-u-1-4 hidden_mid_and_down"><div id="sidebar"><div class="widget"><form class="search-form" action="//www.baidu.com/baidu" method="get" accept-charset="utf-8" target="_blank"><input type="search" name="word" maxlength="20" placeholder="Search"/><input type="hidden" name="si" value="http://yoursite.com"/><input name="tn" type="hidden" value="bds"/><input name="cl" type="hidden" value="3"/><input name="ct" type="hidden" value="2097152"/><input name="s" type="hidden" value="on"/></form></div><div class="widget"><div class="widget-title"><i class="fa fa-folder-o"> 分类</i></div></div><div class="widget"><div class="widget-title"><i class="fa fa-star-o"> 标签</i></div><div class="tagcloud"><a href="/tags/学习/" style="font-size: 15px;">学习</a> <a href="/tags/生活/" style="font-size: 15px;">生活</a></div></div><div class="widget"><div class="widget-title"><i class="fa fa-file-o"> 最近文章</i></div><ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2018/08/08/Mq-md/">Mq探讨</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/07/22/MaxPQ/">优先队列</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/07/19/QuickSort/">快速排序</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/07/15/something/">前段时间的一些想法</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/06/24/MdLeaning/">Markdown 语法学习</a></li></ul></div><div class="widget"><div class="widget-title"><i class="fa fa-external-link"> 友情链接</i></div><ul></ul><a href="http://www.example1.com/" title="site-name1" target="_blank">site-name1</a><ul></ul><a href="http://www.example2.com/" title="site-name2" target="_blank">site-name2</a><ul></ul><a href="http://www.example3.com/" title="site-name3" target="_blank">site-name3</a></div></div></div><div class="pure-u-1 pure-u-md-3-4"><div id="footer">Copyright © 2018 <a href="/." rel="nofollow">开开｜初开.</a> Powered by<a rel="nofollow" target="_blank" href="https://hexo.io"> Hexo.</a><a rel="nofollow" target="_blank" href="https://github.com/tufu9441/maupassant-hexo"> Theme</a> by<a rel="nofollow" target="_blank" href="https://github.com/pagecho"> Cho.</a></div></div></div><a class="show" id="rocket" href="#top"></a><script type="text/javascript" src="/js/totop.js?v=0.0.0" async></script><script type="text/javascript" src="//cdn.bootcss.com/fancybox/3.3.5/jquery.fancybox.min.js" async></script><script type="text/javascript" src="/js/fancybox.js?v=0.0.0" async></script><link rel="stylesheet" type="text/css" href="//cdn.bootcss.com/fancybox/3.3.5/jquery.fancybox.min.css"><script type="text/javascript" src="/js/codeblock-resizer.js?v=0.0.0"></script><script type="text/javascript" src="/js/smartresize.js?v=0.0.0"></script></div></body></html>
